@@ -7,60 +7,13 @@ MainWidget:
         Rectangle:
             pos: self.pos
             size: self.size
-    MDCard:
-        elevation: 7
-        border_radius: 15
-        #radius: [15]
-        md_bg_color: .1,.1,.1,.7
-        width: root.width - 10
-        height: (root.width - 10) * (16/9)
-        center_x: root.width * 1/2
-        center_y: root.height * 1/2
-        shadow_softness:5
-
-        canvas.before:
-            Color:
-                rgba: 0,0,0, .8
-            Rectangle:
-                pos: self.pos
-                size: self.size
-        BoxLayout:
-            pos: self.pos
-            size_hint: 1, 1
-            #width: root.width - 10
-            #height: root.height - 10
-            orientation: 'vertical'
-            border_radius: 15
-            canvas.before:
-                Color:
-                    rgba: 0,0,0,.8
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            AsyncImage:
-                id: theater_name
-                pos_hint: {'x': 0, 'top': 1}
-                size_hint: None, 5/32
-                width: root.width - 10
-                #height: (root.height - 10) * 5/32
-                source: root.twilight
-                allow_stretch: True
-                opacity: 1
-                keep_ratio: True
-            MDCard:
-                elevation: 7
-                pos_hint: {'x': 0, 'bottom': 0}
-                size_hint: None, 27/32
-                width: root.width - 10
-                md_bg_color: 1, 1, 1, .7
-                shadow_softness:2
-
-                AsyncImage:
-                    id: poster_image
-                    pos_hint: {'center_x': .5, 'center_y': .5}
-                    size_hint: .99,.99
-                    source: root.poster_path
-                    opacity: 1
-                    nocache: True
-                    allow_stretch: True
-                    keep_ratio: True
+        AsyncImage:
+            id: theater_name
+            pos_hint: {'x': 0, 'top': 1}
+            size_hint: None, 5/32
+            width: root.width - 10
+            #height: (root.height - 10) * 5/32
+            source: root.twilight
+            allow_stretch: True
+            opacity: 1
+            keep_ratio: True
