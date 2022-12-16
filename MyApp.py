@@ -1,3 +1,4 @@
+import time
 import kivy
 from kivymd.app import MDApp
 from kivy.core.window import Window
@@ -14,13 +15,17 @@ from kivy.network.urlrequest import UrlRequest
 from PIL import Image as pilImage
 from PIL import ImageFile
 from io import BytesIO
+from kivy.loader import Loader
 import json
-import requests
-import time
+Window.size = 1080, 1920
+#Window.size = 1080/2, 1920/2
 #Window.fullscreen = True
-Window.size = (int(9*50), int(16*50))
+
 Window.borderless = True
+
 ImageFile.LOAD_TRUNCATED_IMAGES=True
+
+#Loader.num_workers = 4
 
 
 class MyApp(MDApp):
@@ -30,8 +35,8 @@ class MyApp(MDApp):
     old = None
     movie_id = None
     loading = False
-    poster_path = "static/poster.jpg"
-    poster_path2 = "static/poster.jpg"
+    poster_path = "/home/pi/Desktop/attempt2hometheater/static/poster.jpg"
+    poster_path2 = "/home/pi/Desktop/attempt2hometheater/static/poster.jpg"
     twilight = "static/theatername.jpg"
     current = "poster1"
 
@@ -40,9 +45,9 @@ class MyApp(MDApp):
         mainCard = MDCard(elevation=7,size_hint=(None,None),width=(Window.width-10),height=((Window.width-10)*(16/9)),center_x=((Window.width)/2),center_y=((Window.height)/2),md_bg_color=(.1,.1,.1,.7),shadow_softness=4)
 
         boxContainer = MDBoxLayout(size_hint=(1,1),orientation='vertical')
-        imageContainer = MDRelativeLayout(size_hint=(1,1))
-        self.posterImage = AsyncImage(on_load=self.animate1,allow_stretch=True,keep_ratio=True,pos_hint={'center_x':.5,'center_y':.5},size_hint=(None,None),width=(Window.width - 16),height=((Window.height - 16)*(27/32)),source=self.poster_path)
-        self.posterImage2 = AsyncImage(on_load=self.animate2,allow_stretch=True,keep_ratio=True,pos_hint={'center_x':.5,'center_y':.5},size_hint=(None,None),width=(Window.width-16),height=((Window.height-16)*(27/32)),opacity=1,source=self.poster_path2)
+        imageContainer = MDRelativeLayout(size_hint=(1,1), opacity=1)
+        self.posterImage = AsyncImage(on_load=self.animate1, allow_stretch=True,keep_ratio=True,pos_hint={'center_x':.5,'center_y':.5},size_hint=(None,None),width=(Window.width - 16),height=((Window.height - 16)*(27/32)),source=self.poster_path, opacity=1)
+        self.posterImage2 = AsyncImage(on_load=self.animate2, allow_stretch=True,keep_ratio=True,pos_hint={'center_x':.5,'center_y':.5},size_hint=(None,None),width=(Window.width-16),height=((Window.height-16)*(27/32)),opacity=1,source=self.poster_path2)
         twilightImage = Image(allow_stretch=True,keep_ratio=True, pos_hint={'x': 0,'top':1},size_hint=(None,5/32),width=(Window.width-10),source=self.twilight)
         posterCard = MDCard(elevation=7,pos_hint={'x':0,'bottom':0},size_hint=(None,(27/32)),width=(Window.width-10),md_bg_color=(1,1,1,1),shadow_softness=2)
         imageContainer.add_widget(self.posterImage)
@@ -58,62 +63,50 @@ class MyApp(MDApp):
         print("SCHEDULER STOPPED")
         self.loading = True
         self.checkApi.cancel()
-        #print(data)
         self.movie_id = data['movie_id']
-        if data.get('poster_path'):
-            new_path = data.get('poster_path')
-            print("Source is " + self.current)
-            if self.current == "poster1":
-                self.poster_path2 = data['poster_path']
-                self.posterImage2.source = self.poster_path2
-            else:
-                self.poster_path = data['poster_path']
-                self.posterImage.source = self.poster_path
-            return
-        print("SCHEDULER STARTED")
-        self.start_scheduler()
+        print("Source is " + self.current)
+        if self.current == "poster1":
+            self.current = "poster2"
+            #self.posterImage2.source = data['poster_path']
+            self.posterImage2.reload()
+        else:
+            self.current = "poster1"
+            #self.posterImage.source = data['poster_path']
+            self.posterImage.reload()
         return
 
-
+    i = 0
     def check_for_image(self, req, result):
         msg = result
         if msg.get('msg',None) and self.loading == False:
+            self.i += 1
+            print("Check_for_image: " + str(self.i))
             data = msg['msg']
-            #print(self.movie_id)
             if data != 'Movie has not changed':
+                print("Check_for_image said to update image")
                 self.update_image(data)
         return
 
-    def refresh_image(self):
+    def refresh_image(self, *args):
         rsp = UrlRequest(f"http://192.168.86.26:9090/get-current-movie/{self.movie_id}", self.check_for_image)
         return
 
     def animate1(self, *args):
-        #print("HELLO THERE> THE IMAGE1 IS LOADED")
-        anim1 = Animation(opacity=0, duration=2)
-        anim2 = Animation(opacity=1, duration=2)
-        anim2.bind(on_complete=self.start_scheduler)
-        anim1.start(self.posterImage2)
-        anim2.start(self.posterImage)
-        self.current = "poster1"
-        self.loading = False
+        self.posterImage.opacity = 1
+        self.posterImage2.opacity = 0
+        self.start_scheduler()
         return
 
     def animate2(self, *args):
-        #print("HELLO THERE> THE IMAGE2 IS LOADED")
-        anim1 = Animation(opacity=0, duration=2)
-        anim2 = Animation(opacity=1, duration=2)
-        anim2.bind(on_complete=self.start_scheduler)
-        anim1.start(self.posterImage)
-        anim2.start(self.posterImage2)
-        self.current = "poster2"
-        self.loading = False
+        self.posterImage.opacity = 0
+        self.posterImage2.opacity = 1
+        self.start_scheduler()
         return
 
-    def start_scheduler(self, *args):
+    def start_scheduler(self):
         print("SCHEDULER STARTED")
-        time.sleep(0.5)
         self.checkApi()
+        self.loading = False
         return
 
 if __name__ == "__main__":
