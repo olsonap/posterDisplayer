@@ -17,7 +17,7 @@ from PIL import ImageFile
 from io import BytesIO
 from kivy.loader import Loader
 import json
-Window.size = 1080, 1920
+Window.size = int(1080/3), int(1920/3)
 #Window.size = 1080/2, 1920/2
 #Window.fullscreen = True
 
